@@ -1,19 +1,77 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: A simple CloudFormation template to create an S3 bucket and ec2 instance.
+Description: A CloudFormation template to create an S3 bucket, EC2 instance, and enable private Git repository cloning.
+
+Parameters:
+  PrivateSSHKey:
+    Type: String
+    Description: private ssh key to close prject form git
+
 
 Resources:
   TestS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: test-cloudformation-deployment
+
+  # EC2KeyPair:
+  #   Type: AWS::EC2::KeyPair
+  #   Properties:
+  #     # KeyName: generated-keypair
+  #     KeyType: rsa
+  #     PublicKeyMaterial: 
+
   SampleNodejsDeploy:
     Type: AWS::EC2::Instance
     Properties:
       AvailabilityZone: ap-south-1a
-      ImageId: ami-053b12d3152c0cc71
+      ImageId: ami-053b12d3152c0cc71 # Ensure this AMI ID is correct for your region
       InstanceType: t2.micro
+      # KeyName: !Ref EC2KeyPair
+      UserData: 
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -e
+          # Install required software
+          apt-get update
+          apt-get install -y git curl
+          
+          # Add the private SSH key
+          mkdir -p /home/ubuntu/.ssh
+          echo "${PrivateSSHKey}" > /home/ubuntu/.ssh/id_rsa
+          chmod 600 /home/ubuntu/.ssh/id_rsa
+
+          # Add GitHub to known hosts to avoid SSH fingerprint prompts
+          ssh-keyscan -t rsa github.com >> /home/ubuntu/.ssh/known_hosts
+
+          # Clone the private repository
+          cd /home/ubuntu
+          git clone git@github.com:your-private-repo/node_with_docker.git
+          cd node_with_docker
+
+          # Install Node.js and dependencies
+          curl -sL https://deb.nodesource.com/setup_20.x | bash -
+          apt-get install -y nodejs
+          npm install
+          npm install -g pm2
+
+          # Start the application using PM2
+          pm2 start npm --name "Test-cloud-formation-deployment" -- start -p 3000
+      Metadata:
+        AWS::CloudFormation::Init:
+          config:
+            files:
+              "/home/ubuntu/.ssh/id_rsa":
+                content: !Sub |
+                  ${PrivateSSHKey}
+                mode: "000600"
+                owner: ubuntu
+                group: ubuntu
 
 Outputs:
   S3BucketName:
     Description: The name of the S3 bucket created
     Value: !Ref TestS3Bucket
+
+  # KeyPairPrivateKey:
+  #   Description: The private key for the generated key pair
+  #   Value: !GetAtt EC2KeyPair.KeyMaterial
