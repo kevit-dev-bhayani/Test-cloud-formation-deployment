@@ -1,0 +1,13 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: A simple CloudFormation template to create an S3 bucket.
+
+Resources:
+  TestS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: test-cloudformation-deployment
+
+Outputs:
+  S3BucketName:
+    Description: The name of the S3 bucket created
+    Value: !Ref TestS3Bucket
