@@ -4,21 +4,13 @@ Description: A CloudFormation template to create an S3 bucket, EC2 instance, and
 Parameters:
   PrivateSSHKey:
     Type: String
-    Description: private ssh key to close prject form git
-
+    Description: Private SSH key to clone the project from Git
 
 Resources:
   TestS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: test-cloudformation-deployment
-
-  # EC2KeyPair:
-  #   Type: AWS::EC2::KeyPair
-  #   Properties:
-  #     # KeyName: generated-keypair
-  #     KeyType: rsa
-  #     PublicKeyMaterial: 
 
   SampleNodejsDeploy:
     Type: AWS::EC2::Instance
@@ -45,8 +37,8 @@ Resources:
 
           # Clone the private repository
           cd /home/ubuntu
-          git clone git@github.com:your-private-repo/node_with_docker.git
-          cd node_with_docker
+          git clone git@github.com:kevit-dev-bhayani/Test-cloud-formation-deployment.git
+          cd Test-cloud-formation-deployment
 
           # Install Node.js and dependencies
           curl -sL https://deb.nodesource.com/setup_20.x | bash -
@@ -56,22 +48,8 @@ Resources:
 
           # Start the application using PM2
           pm2 start npm --name "Test-cloud-formation-deployment" -- start -p 3000
-      Metadata:
-        AWS::CloudFormation::Init:
-          config:
-            files:
-              "/home/ubuntu/.ssh/id_rsa":
-                content: !Sub |
-                  ${PrivateSSHKey}
-                mode: "000600"
-                owner: ubuntu
-                group: ubuntu
 
 Outputs:
   S3BucketName:
     Description: The name of the S3 bucket created
     Value: !Ref TestS3Bucket
-
-  # KeyPairPrivateKey:
-  #   Description: The private key for the generated key pair
-  #   Value: !GetAtt EC2KeyPair.KeyMaterial
