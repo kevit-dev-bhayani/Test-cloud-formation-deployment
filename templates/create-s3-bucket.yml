@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2025-01-01'
+AWSTemplateFormatVersion: '2010-09-09'
 Description: A simple CloudFormation template to create an S3 bucket and ec2 instance.
 
 Resources:
