@@ -25,4 +25,4 @@ jobs:
           aws cloudformation deploy \
             --template-file templates/create-s3-bucket.yml \
             --stack-name my-s3-bucket-stack \
-            --capabilities CAPABILITY_NAMED_IAM
+            --capabilities CAPABILITY_NAMED_IAM CAPABILITY_IAM

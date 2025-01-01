@@ -1,11 +1,17 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: A simple CloudFormation template to create an S3 bucket.
+Description: A simple CloudFormation template to create an S3 bucket and ec2 instance.
 
 Resources:
   TestS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: test-cloudformation-deployment
+  SampleNodejsDeploy:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: ap-south-1
+      ImageId: ami-0010edd796fd9c04d
+      InstanceType: t2.micro
 
 Outputs:
   S3BucketName:
