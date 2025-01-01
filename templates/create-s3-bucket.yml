@@ -4,6 +4,7 @@ Description: A CloudFormation template to create an S3 bucket, EC2 instance, and
 Parameters:
   PrivateSSHKey:
     Type: String
+    NoEcho: true
     Description: Private SSH key to clone the project from Git
 
 Resources:
@@ -12,41 +13,68 @@ Resources:
     Properties:
       BucketName: test-cloudformation-deployment
 
+  EC2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "ec2.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: "S3AccessPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "s3:GetObject"
+                Resource: "arn:aws:s3:::test-cloudformation-deployment/*"
+
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Allow SSH and Node.js application port"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: "0.0.0.0/0"
+        - IpProtocol: tcp
+          FromPort: '3000'
+          ToPort: '3000'
+          CidrIp: "0.0.0.0/0"
+
   SampleNodejsDeploy:
     Type: AWS::EC2::Instance
     Properties:
       AvailabilityZone: ap-south-1a
-      ImageId: ami-053b12d3152c0cc71 # Ensure this AMI ID is correct for your region
+      ImageId: ami-053b12d3152c0cc71
       InstanceType: t2.micro
-      # KeyName: !Ref EC2KeyPair
-      UserData: 
+      IamInstanceProfile: !Ref EC2Role
+      SecurityGroups:
+        - !Ref EC2SecurityGroup
+      UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
           set -e
-          # Install required software
           apt-get update
           apt-get install -y git curl
-          
-          # Add the private SSH key
           mkdir -p /home/ubuntu/.ssh
           echo "${PrivateSSHKey}" > /home/ubuntu/.ssh/id_rsa
           chmod 600 /home/ubuntu/.ssh/id_rsa
-
-          # Add GitHub to known hosts to avoid SSH fingerprint prompts
           ssh-keyscan -t rsa github.com >> /home/ubuntu/.ssh/known_hosts
-
-          # Clone the private repository
           cd /home/ubuntu
           git clone git@github.com:kevit-dev-bhayani/Test-cloud-formation-deployment.git
           cd Test-cloud-formation-deployment
-
-          # Install Node.js and dependencies
           curl -sL https://deb.nodesource.com/setup_20.x | bash -
           apt-get install -y nodejs
           npm install
           npm install -g pm2
-
-          # Start the application using PM2
+          pm2 startup
+          pm2 save
           pm2 start npm --name "Test-cloud-formation-deployment" -- start -p 3000
 
 Outputs:
