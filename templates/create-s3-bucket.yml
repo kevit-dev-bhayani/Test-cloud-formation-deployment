@@ -5,7 +5,7 @@ Resources:
   TestS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: test-cloudformation-deployment
+      BucketName: test-cloudformation-deployment-2
 
 Outputs:
   S3BucketName:

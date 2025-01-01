@@ -1,4 +1,4 @@
-name: Deploy CloudFormation Stack11
+name: Deploy CloudFormation Stack
 
 on:
   push:
@@ -25,5 +25,4 @@ jobs:
           aws cloudformation deploy \
             --template-file templates/create-s3-bucket.yml \
             --stack-name my-s3-bucket-stack \
-            --parameter-overrides BucketName=${{ secrets.S3_BUCKET_NAME }} Region=${{ secrets.MY_AWS_REGION }} \
             --capabilities CAPABILITY_NAMED_IAM
